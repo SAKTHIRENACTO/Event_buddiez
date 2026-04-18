@@ -3,7 +3,6 @@ import Masonry from "react-masonry-css";
 import { X, Trash2, Upload, ChevronLeft, ChevronRight, ImagePlus } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { SEOHead } from '../../components/SEOHead';
-import { theme } from "../../../styles/theme";
 import { useSearchParams } from "react-router-dom";
 
 interface GalleryImage {

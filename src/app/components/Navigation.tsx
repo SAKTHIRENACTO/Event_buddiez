@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import logo from "../../assets/Logo.png";
-import { authAPI } from "../../api/auth.api";
 
 export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,48 +11,19 @@ export function Navigation() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const data = await authAPI.getUser();
-        setUser(data);
-      } catch (error) {
-        console.error("User fetch failed", error);
-      }
-    };
-
-    fetchUser();
   }, []);
-
-  // ADMIN CHECK
   const isAdmin =
     user?.id === "cd97a9cf-d071-429f-88f8-77d5bd3ffeaa";
-
-  // PUBLIC NAVIGATION
   const publicNavLinks = [
     { to: "/", label: "Home" },
     { to: "/services", label: "Services" },
     { to: "/gallery", label: "Gallery" },
     { to: "/contact", label: "Contact" },
-  ];
-
-  // ADMIN NAVIGATION
-  const adminNavLinks = [
-    { to: "/admin", label: "Dashboard" },
-    { to: "/admin/events", label: "Events" },
-    { to: "/admin/vendors", label: "Vendors" },
-    { to: "/admin/reports", label: "Reports" },
-    { to: "/admin/content", label: "Content" },
+    { to: "/vendor", label: "Become a Vendor" },
   ];
 
   const navLinks =  publicNavLinks;
-  // const navLinks = isAdmin ? adminNavLinks : publicNavLinks;
-
   const isActive = (path: string) => location.pathname === path;
-
-  const handleLogoClick = () => {
-    // navigate(`/`);
-    navigate(`/login?isLoggedin=${isAdmin}`);
-  };
 
   return (
     <nav className="bg-gradient-to-r from-[#8B0000] to-[#6B0000] text-white sticky top-0 z-50 shadow-lg">
@@ -66,7 +36,6 @@ export function Navigation() {
 
             <div
               className="w-16 h-16 flex items-center justify-center cursor-pointer"
-              onClick={handleLogoClick}
             >
               <img
                 src={logo}

@@ -3,20 +3,17 @@ import { ArrowRight, Calendar, Users, Star, Sparkles, Heart, Award, Headphones, 
 import { SEOHead } from '../../components/SEOHead';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
-import Engagement from '../../../assets/Engagement.png';
-import NamingCerimany from '../../../assets/NamingCerimany.png';
-import Family from '../../../assets/Family.png';
-import BabyShower from '../../../assets/BabyShower.jpeg';
 import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import "swiper/css";
 import { useNavigate } from "react-router-dom";
 import TestimonialSection from '../../components/ui/Testimonial';
+import { supabase } from '../../lib/supabaseClient';
 
 
 export function Home() {
-  const heroImages = [
+const heroImages = [
     "https://i.pinimg.com/1200x/9d/cd/fb/9dcdfb09eee39cedba8bb80227bcd191.jpg",
     "https://i.pinimg.com/1200x/80/22/50/8022506379cd94c43b22225c71344f76.jpg",
     "https://i.pinimg.com/1200x/d2/35/fb/d235fb69e207d9c8661d850a2965fa93.jpg",
@@ -24,6 +21,34 @@ export function Home() {
 
   const [current, setCurrent] = useState(0);
   const navigate = useNavigate();
+  const [images, setImages] = useState<any[]>([]);
+
+  const fetchImages = async () => {
+    const { data, error } = await supabase
+      .storage
+      .from('public_images')
+      .list('serviceimages');
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+    const formatted = data.map((img) => {
+      const { data: urlData } = supabase
+        .storage
+        .from('public_images')
+        .getPublicUrl(`serviceimages/${img.name}`);
+      return {
+        name: img.name.replace(/\.[^/.]+$/, ""),
+        image: urlData.publicUrl,
+      };
+    });
+    setImages(formatted);
+  };
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,6 +56,7 @@ export function Home() {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+
   const stats = [
     { icon: Calendar, value: '10+', label: 'Events Completed' },
     { icon: Users, value: '10+', label: 'Happy Clients' },
@@ -66,64 +92,14 @@ export function Home() {
     },
   ];
 
-  const featuredServices = [
-    {
-      title: "Corporate Events",
-      image: "https://i.pinimg.com/1200x/03/ab/03/03ab03d3d4ddc645134259c0e31dbe11.jpg",
-    },
-    {
-      title: "Wedding Events",
-      image: "https://i.pinimg.com/736x/d2/35/fb/d235fb69e207d9c8661d850a2965fa93.jpg",
-    },
-    {
-      title: "Reception Events",
-      image: "https://i.pinimg.com/736x/80/22/50/8022506379cd94c43b22225c71344f76.jpg",
-    },
-    {
-      title: "Engagement Ceremony",
-      image: Engagement,
-    },
-    {
-      title: "Birthday Parties",
-      image: "https://i.pinimg.com/736x/d3/84/87/d38487b6d1c69cbebd8cae324df8ddd5.jpg",
-    },
-    {
-      title: "Baby Shower",
-      image: BabyShower,
-    },
-    {
-      title: "Puberty Function",
-      image: Family,
-    },
-    {
-      title: "Naming Ceremony",
-      image: NamingCerimany,
-    },
-    {
-      title: "Housewarming ",
-      image: "https://i.pinimg.com/736x/47/6e/de/476edea4f0e408086d15db6357a6d0b1.jpg",
-    },
-    {
-      title: "Anniversary Celebrations",
-      image: "https://i.pinimg.com/736x/41/2a/f7/412af77e8c3f9eb6445f2fed764cb5f7.jpg",
-    },
-    {
-      title: "Get-togethers & Reunions",
-      image: "https://i.pinimg.com/control1/736x/39/77/c3/3977c362b2539bbb740dc1f487b16d64.jpg",
-    },
-    {
-      title: "Christmas Events",
-      image: "https://i.pinimg.com/736x/ad/06/f6/ad06f6748893f1cab6792c40b9c881d3.jpg",
-    },
-    {
-      title: "School & College Events",
-      image: "https://i.pinimg.com/736x/52/fb/5d/52fb5d9391eb956d6391abcbb24a43a5.jpg",
-    },
-    {
-      title: "Community / Public Events",
-      image: "https://i.pinimg.com/736x/91/39/0e/91390e7ce7d3dc3c6ae1b40f3b203dc3.jpg",
-    },
-  ];
+  const formatName = (name: string) => {
+    return name
+      .replace(/\.[^/.]+$/, "") // remove extension
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+
   return (
     <>
       <SEOHead
@@ -135,7 +111,7 @@ export function Home() {
       {/* Hero Section */}
       <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-          {heroImages.map((img, index) => (
+       {heroImages.map((img, index) => (
             <img
               key={index}
               src={img}
@@ -252,11 +228,11 @@ export function Home() {
             </p>
           </div>
 
-          {/* Swiper */}
+
           <Swiper
             modules={[Autoplay]}
             spaceBetween={10}
-            slidesPerView={2} // ✅ Mobile default (3 per row feel)
+            slidesPerView={2}
             autoplay={{
               delay: 1500,
               disableOnInteraction: false,
@@ -268,40 +244,35 @@ export function Home() {
               1024: { slidesPerView: 4, spaceBetween: 20 },
             }}
           >
-            {featuredServices.map((service, index) => (
+            {images.map((service, index) => (
               <SwiperSlide key={index}>
-
                 <Card
                   onClick={() => navigate(`/services`)}
                   className="overflow-hidden group cursor-pointer rounded-none"
                 >
                   <div className="relative h-32 sm:h-48 md:h-64 overflow-hidden">
-
-                    {/* Image */}
                     <img
                       src={service.image}
-                      alt={service.title}
+                      alt={service.name}
                       className="w-full h-full object-cover 
-                transition duration-500 
-                group-hover:scale-110"
+                      transition duration-500 
+                      group-hover:scale-110"
                     />
 
-                    {/* Title */}
                     <h3 className="
-                absolute bottom-1 sm:bottom-2 w-full 
-                text-center 
-                bg-[#8B0000]/90 
-                text-[#D4AF37] 
-                text-[10px] sm:text-sm md:text-lg 
-                font-semibold 
-                py-1 sm:py-2
-              ">
-                      {service.title}
+                          absolute bottom-1 sm:bottom-2 w-full 
+                          text-center 
+                          bg-[#8B0000]/90 
+                          text-[#D4AF37] 
+                          text-[10px] sm:text-sm md:text-lg 
+                          font-semibold 
+                          py-1 sm:py-2
+                        ">
+                      {formatName(service.name)}
                     </h3>
 
                   </div>
                 </Card>
-
               </SwiperSlide>
             ))}
           </Swiper>
@@ -323,25 +294,25 @@ export function Home() {
                 <div
                   key={index}
                   className="group text-center 
-        p-4 sm:p-6 md:p-8 
-        bg-white/10 rounded-xl backdrop-blur-md 
-        transition-all duration-500 cursor-pointer
-        hover:-translate-y-2 md:hover:-translate-y-3 
-        hover:bg-white/20 
-        hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)]"
+                    p-4 sm:p-6 md:p-8 
+                    bg-white/10 rounded-xl backdrop-blur-md 
+                    transition-all duration-500 cursor-pointer
+                    hover:-translate-y-2 md:hover:-translate-y-3 
+                    hover:bg-white/20 
+                    hover:shadow-[0_10px_30px_rgba(212,175,55,0.3)]"
                 >
                   {/* Icon */}
                   <Icon
                     className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 
-          text-[#D4AF37] mx-auto mb-3 sm:mb-4
-          transition-transform duration-500 
-          group-hover:scale-110 md:group-hover:scale-125 
-          group-hover:rotate-6"
+                      text-[#D4AF37] mx-auto mb-3 sm:mb-4
+                      transition-transform duration-500 
+                      group-hover:scale-110 md:group-hover:scale-125 
+                      group-hover:rotate-6"
                   />
 
                   {/* Title */}
                   <h3 className="text-sm sm:text-base md:text-xl 
-        mb-2 sm:mb-3 text-[#D4AF37] font-semibold">
+                    mb-2 sm:mb-3 text-[#D4AF37] font-semibold">
                     {item.title}
                   </h3>
 
@@ -379,3 +350,6 @@ export function Home() {
     </>
   );
 }
+
+
+
