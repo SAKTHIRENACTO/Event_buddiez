@@ -110,12 +110,13 @@ export function Contact() {
       />
 
       {/* Hero Section */}
-      <section className="relative py-10 bg-gradient-to-b from-[#8B0000] to-[#6B0000] text-white">
+      <section className="relative py-12 bg-gradient-to-b from-[#8B0000] to-[#6B0000] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <MessageSquare className="w-16 h-16 text-[#D4AF37] mx-auto mb-6" />
+          {/* <MessageSquare className="w-16 h-16 text-[#D4AF37] mx-auto mb-6" /> */}
           <h1 className="text-5xl mb-6">
             Get in <span className="text-[#D4AF37]">Touch</span>
           </h1>
+          <div className="w-16 h-1 bg-[#D4AF37] mx-auto mb-6"></div>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
             Have questions? We'd love to hear from you. Send us a message and
             we'll respond as soon as possible.

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { ChevronLeft, ChevronRight, Upload, X, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Upload, X, FileText, CheckCircle } from "lucide-react";
+import { SEOHead } from '../../components/SEOHead';
+import React from 'react';
+import FileUploadField from "../../components/ui/fileupload";
 
 const TAMIL_NADU_DISTRICTS = [
   "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri",
@@ -20,34 +23,41 @@ const BUSINESS_CATEGORIES = [
 const ID_PROOF_TYPES = ["Aadhaar", "PAN Card", "Passport", "Driving License", "Voter ID"];
 
 interface FormData {
+  //bussiness
   businessName: string;
   ownerName: string;
   businessType: string;
   gstNumber: string;
   experience: string;
+  //contact
   email: string;
   phone: string;
   alternatePhone: string;
   city: string;
   serviceAreas: string[];
+  //service
   category: string;
   description: string;
   travelAvailable: boolean;
+  //portfolio
   portfolioImages: FileList | null;
   website: string;
   instagram: string;
   youtube: string;
+  //documents
   idProof: FileList | null;
   idProofType: string;
   businessLicense: FileList | null;
   gstCertificate: FileList | null;
   agree: boolean;
+
 }
 
-export default function ServiceProviderForm() {
+
+export default function App() {
   const [step, setStep] = useState(1);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
-  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FormData>({
+  const { register, handleSubmit,reset, trigger, formState: { errors }, watch, setValue } = useForm<FormData>({
     defaultValues: {
       businessType: "individual",
       travelAvailable: false,
@@ -55,6 +65,7 @@ export default function ServiceProviderForm() {
       agree: false
     }
   });
+  
 
   const businessType = watch("businessType");
   const gstNumber = watch("gstNumber");
@@ -64,6 +75,8 @@ export default function ServiceProviderForm() {
   const onSubmit = (data: FormData) => {
     console.log({ ...data, serviceAreas: selectedAreas });
     alert("Form submitted! Check console for data.");
+    reset();
+    setStep(1);
   };
 
   const toggleArea = (area: string) => {
@@ -75,49 +88,158 @@ export default function ServiceProviderForm() {
   };
 
   const steps = [
-    { number: 1, title: "Business Info" },
-    { number: 2, title: "Contact" },
-    { number: 3, title: "Services" },
-    { number: 4, title: "Portfolio" },
-    { number: 5, title: "Documents" },
-    { number: 6, title: "Review" }
+    { number: 1, title: 'Bussiness Info', description: 'Enter your details' },
+    { number: 2, title: 'Contact Info', description: 'Create your account' },
+    { number: 3, title: 'Service Details', description: 'Choose your settings' },
+    { number: 4, title: 'Portfolio', description: 'Verify your identity' },
+    { number: 5, title: 'Upload Documents', description: 'Add payment method' },
+    { number: 6, title: 'Review', description: 'Finish setup' },
   ];
 
+
+
+  const onError = (errors: any) => {
+    const firstError = Object.keys(errors)[0];
+    const el = document.querySelector(`[name="${firstError}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+  const inputClass = `w-full px-4 py-2 border rounded-lg 
+             focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+              transition-all duration-200 `;
+  const validateStep = async () => {
+    let fieldsToValidate: (keyof FormData)[] = [];
+
+    switch (step) {
+      case 1:
+        fieldsToValidate = ["businessName", "ownerName", "experience"];
+        break;
+      case 2:
+        fieldsToValidate = ["email", "phone", "city"];
+        if (selectedAreas.length === 0) {
+          alert("Please select at least one service area");
+          return false;
+        }
+        break;
+      case 3:
+        fieldsToValidate = ["category", "description"];
+        break;
+      case 4:
+        return true; // optional step
+      case 5:
+        fieldsToValidate = ["idProofType", "idProof"];
+        if (gstNumber && !watch("gstCertificate")) {
+          alert("GST Certificate is required if GST number is provided");
+          return false;
+        }
+        break;
+      default:
+        return true;
+    }
+
+    const result = await trigger(fieldsToValidate);
+    return result;
+  };
+  const isStepValid = Object.keys(errors).length === 0;
+
+
+  // Inside your component
+  const portfolioImages = watch("portfolioImages");
+  const [previews, setPreviews] = React.useState<{ id: string; url: string; file: File }[]>([]);
+
+  // Handle File Changes & Create Previews
+  const handlePortfolioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    // Limit to 10 images total
+    const nextFiles = [...previews.map(p => p.file), ...files].slice(0, 10);
+
+    // Revoke old URLs to prevent memory leaks
+    previews.forEach(p => URL.revokeObjectURL(p.url));
+
+    const newPreviews = nextFiles.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      url: URL.createObjectURL(file),
+      file
+    }));
+
+    setPreviews(newPreviews);
+    setValue("portfolioImages", nextFiles);
+  };
+
+  // Remove Image Logic
+  const removeImage = (id: string) => {
+    const filtered = previews.filter(p => {
+      if (p.id === id) URL.revokeObjectURL(p.url);
+      return p.id !== id;
+    });
+    setPreviews(filtered);
+    setValue("portfolioImages", filtered.map(p => p.file));
+  };
+
+
   return (
-    <div className="min-h-screen bg-[#D4AF37] py-8 px-4">
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-10">
-          <div className="flex items-center justify-between relative">
-
-
-            {steps.map((s, idx) => (
-              <div key={s.number} className="flex-1 flex flex-col items-center relative z-10">
-
-                <div
-                  className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-semibold transition-all
-                   ${step > s.number
-                      ? "bg-green-600 text-white"
-                      : step === s.number
-                        ? "bg-indigo-600 text-white scale-110"
-                        : "bg-gray-300 text-gray-600"
-                    }`}
-                >
-                  {step > s.number ? <Check className="w-4 h-4" /> : s.number}
-                </div>
-
-                <span className="text-[10px] sm:text-xs mt-2 text-center px-1">
-                  {s.title}
-                </span>
-              </div>
-            ))}
-            {/* Line */}
-            <div className="absolute top-5 left-0 right-0 h-1 bg-gray-300 z-0" />
-
-          </div>
+    <div className="relative min-h-screen bg-gray-50">
+      <SEOHead
+        title="Gallery"
+        description="Browse our portfolio of beautifully executed South Indian events, weddings, and cultural celebrations."
+        keywords="event gallery, wedding photos, south indian weddings, event decoration"
+      />
+      <section className="relative py-12 bg-gradient-to-br from-[#8B0000] to-[#4A0000] text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl font-serif mb-6">
+            <span className="text-[#D4AF37]">Vendor Registration</span>
+          </h1>
+          <div className="w-16 h-1 bg-[#D4AF37] mx-auto mb-6"></div>
+          <p className="text-xl text-gray-200 max-w-3xl mx-auto">
+            We welcomes skilled professionals. we encourage you to apply. Join us in connecting with customers and growing your business through our platform.
+          </p>
         </div>
+      </section>
 
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="size-full flex items-center justify-center bg-gray-300 p-8">
+        <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-8">
+
+          <div className="mb-12">
+            <div className="flex items-center justify-between relative">
+              {/* Progress Line */}
+              <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 -z-10">
+                <div
+                  className="h-full bg-blue-600 transition-all duration-300"
+                  style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
+                />
+              </div>
+
+              {/* Steps */}
+              {steps.map((s) => (
+                <div key={s.number} className="flex flex-col items-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all
+                       duration-300 ${step > s.number
+                        ? 'bg-blue-600 text-white'
+                        : step === s.number
+                          ? 'bg-blue-600 text-white ring-4 ring-blue-100'
+                          : 'bg-white border-2 border-slate-300 text-slate-400'
+                      }`}
+                  >
+                    {step > s.number ? (
+                      <Check className="w-5 h-5" />
+                    ) : (
+                      <span>{s.number}</span>
+                    )}
+                  </div>
+                  <div className="mt-2 text-center">
+                    <p className={`text-sm ${s.number <= step ? 'text-slate-800' : 'text-slate-400'}`}>
+                      {s.title}
+                    </p>
+                  </div>
+                </div>
+              ))}
+
+
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit, onError)}>
             {step === 1 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-6">Business Information</h2>
@@ -304,15 +426,15 @@ export default function ServiceProviderForm() {
                         <label
                           key={district}
                           className={`flex items-center px-3 py-2 rounded cursor-pointer transition-colors ${selectedAreas.includes(district)
-                              ? "bg-indigo-100 border border-indigo-500"
-                              : "bg-gray-50 border border-gray-200 hover:bg-gray-100"
+                            ? "bg-[#D4AF37] text-white border-[#D4AF37]"
+                            : "bg-gray-50 border border-gray-200 hover:bg-gray-100"
                             }`}
                         >
                           <input
                             type="checkbox"
                             checked={selectedAreas.includes(district)}
                             onChange={() => toggleArea(district)}
-                            className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 rounded"
+                            className="w-4 h-4 text-[#D4AF37] focus:ring-[#D4AF37] rounded"
                           />
                           <span className="ml-2 text-sm text-gray-700">{district}</span>
                         </label>
@@ -355,7 +477,7 @@ export default function ServiceProviderForm() {
                   <textarea
                     {...register("description", {
                       required: "Description is required",
-                      minLength: { value: 50, message: "Description must be at least 50 characters" }
+                      minLength: { value: 10, message: "Description must be at least 10 characters" }
                     })}
                     rows={5}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
@@ -380,92 +502,115 @@ export default function ServiceProviderForm() {
             )}
 
             {step === 4 && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-6">Portfolio & Social Media</h2>
+              <div className="space-y-8 animate-in fade-in duration-500">
+                <header>
+                  <h2 className="text-2xl font-bold text-gray-900">Portfolio & Social Media</h2>
+                  <p className="text-sm text-gray-500 mt-1">Showcase your work and connect your social presence.</p>
+                </header>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Portfolio Images <span className="text-gray-500 text-xs">(Optional - Max 10 images)</span>
+                {/* Portfolio Upload Section */}
+                <div className="space-y-4">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Portfolio Images
+                    <span className="text-gray-400 font-normal ml-2">(Max 10 images)</span>
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors">
-                    <Upload className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                    <input
-                      {...register("portfolioImages")}
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      className="hidden"
-                      id="portfolio-upload"
-                    />
-                    <label htmlFor="portfolio-upload" className="cursor-pointer">
-                      <span className="text-indigo-600 hover:text-indigo-700 font-medium">Click to upload</span>
-                      <span className="text-gray-600"> or drag and drop</span>
-                    </label>
-                    <p className="text-sm text-gray-500 mt-2">PNG, JPG, JPEG up to 5MB each</p>
-                  </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Website <span className="text-gray-500 text-xs">(Optional)</span>
-                  </label>
-                  <input
-                    {...register("website", {
-                      pattern: {
-                        value: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
-                        message: "Invalid URL"
-                      }
-                    })}
-                    type="url"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="https://yourwebsite.com"
-                  />
-                  {errors.website && (
-                    <p className="text-red-500 text-sm mt-1">{errors.website.message}</p>
+                  {/* Upload Dropzone */}
+                  {previews.length < 10 && (
+                    <div className="relative group border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-indigo-500 hover:bg-indigo-50/30 transition-all cursor-pointer">
+                      <Upload className="w-10 h-10 mx-auto text-gray-400 group-hover:text-indigo-500 mb-3 transition-colors" />
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        onChange={handlePortfolioChange}
+                      />
+                      <div className="space-y-1">
+                        <p className="text-indigo-600 font-medium">Click to upload or drag and drop</p>
+                        <p className="text-xs text-gray-500">PNG, JPG or JPEG (Max 5MB each)</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Image Preview Grid */}
+                  {previews.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 pt-2">
+                      {previews.map((item) => (
+                        <div key={item.id} className="relative aspect-square group overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+                          <img
+                            src={item.url}
+                            alt="Portfolio preview"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                          />
+                          {/* Overlay with Remove Button */}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                              type="button"
+                              onClick={() => removeImage(item.id)}
+                              className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Instagram <span className="text-gray-500 text-xs">(Optional)</span>
-                  </label>
-                  <div className="flex">
-                    <span className="inline-flex items-center px-4 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-gray-600">
-                      @
-                    </span>
-                    <input
-                      {...register("instagram")}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      placeholder="yourusername"
-                    />
-                  </div>
-                </div>
+                <hr className="border-gray-100" />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    YouTube Channel <span className="text-gray-500 text-xs">(Optional)</span>
-                  </label>
-                  <input
-                    {...register("youtube")}
-                    type="url"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="https://youtube.com/@yourchannel"
-                  />
+                {/* Social Links Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Website */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Website</label>
+                    <input
+                      {...register("website", {
+                        pattern: { value: /^(https?:\/\/)?/, message: "Must be a valid URL" }
+                      })}
+                      placeholder="https://yourwebsite.com"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                    />
+                    {errors.website && <p className="text-red-500 text-xs mt-1">{errors.website.message as string}</p>}
+                  </div>
+
+                  {/* Instagram */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Instagram</label>
+                    <div className="flex rounded-lg shadow-sm">
+                      <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-500 text-sm">
+                        @
+                      </span>
+                      <input
+                        {...register("instagram")}
+                        placeholder="username"
+                        className="flex-1 px-4 py-2.5 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
-
             {step === 5 && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-6">Documents</h2>
-
+              <div className="space-y-8 animate-in fade-in duration-500">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
+                  <p className="text-gray-500 text-sm mt-1">Please upload the following documents to verify your business.</p>
+                </div>
+
+                {/* ID Proof Type Selection */}
+                <div className="group">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     ID Proof Type <span className="text-red-500">*</span>
                   </label>
                   <select
-                    {...register("idProofType", { required: "ID proof type is required" })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    {...register("idProofType", { required: "Please select an ID type" })}
+                    className={`w-full px-4 py-2.5 bg-white border rounded-xl transition-all outline-none focus:ring-2 ${errors.idProofType
+                      ? "border-red-500 focus:ring-red-200"
+                      : "border-gray-300 focus:ring-indigo-100 focus:border-indigo-500"
+                      }`}
                   >
                     <option value="">Select ID proof type</option>
                     {ID_PROOF_TYPES.map((type) => (
@@ -473,77 +618,52 @@ export default function ServiceProviderForm() {
                     ))}
                   </select>
                   {errors.idProofType && (
-                    <p className="text-red-500 text-sm mt-1">{errors.idProofType.message}</p>
+                    <p className="text-red-500 text-xs mt-1.5 ml-1">{errors.idProofType.message}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Upload ID Proof <span className="text-red-500">*</span>
-                  </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors">
-                    <Upload className="w-10 h-10 mx-auto text-gray-400 mb-2" />
-                    <input
-                      {...register("idProof", { required: "ID proof is required" })}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      className="hidden"
-                      id="id-proof-upload"
-                    />
-                    <label htmlFor="id-proof-upload" className="cursor-pointer">
-                      <span className="text-indigo-600 hover:text-indigo-700 font-medium">Upload document</span>
-                    </label>
-                    <p className="text-sm text-gray-500 mt-1">PDF, JPG, PNG up to 5MB</p>
-                  </div>
-                  {errors.idProof && (
-                    <p className="text-red-500 text-sm mt-1">{errors.idProof.message}</p>
-                  )}
+                {/* Document Upload Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* ID Proof Upload */}
+                  <FileUploadField
+                    label="Upload ID Proof"
+                    name="idProof"
+                    register={register}
+                    error={errors.idProof}
+                    required="ID proof is required"
+                    watch={watch}
+                    setValue={setValue}
+                  />
+
+                  {/* Business License Upload (Optional) */}
+                  <FileUploadField
+                    label="Business License"
+                    subLabel="(Optional)"
+                    name="businessLicense"
+                    register={register}
+                    error={errors.businessLicense}
+                    watch={watch}
+                    setValue={setValue}
+                  />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Business License <span className="text-gray-500 text-xs">(Optional)</span>
-                  </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors">
-                    <Upload className="w-10 h-10 mx-auto text-gray-400 mb-2" />
-                    <input
-                      {...register("businessLicense")}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      className="hidden"
-                      id="license-upload"
-                    />
-                    <label htmlFor="license-upload" className="cursor-pointer">
-                      <span className="text-indigo-600 hover:text-indigo-700 font-medium">Upload document</span>
-                    </label>
-                    <p className="text-sm text-gray-500 mt-1">PDF, JPG, PNG up to 5MB</p>
-                  </div>
-                </div>
-
+                {/* Conditional GST Upload */}
                 {gstNumber && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      GST Certificate <span className="text-gray-500 text-xs">(Required if GST number provided)</span>
-                    </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors">
-                      <Upload className="w-10 h-10 mx-auto text-gray-400 mb-2" />
-                      <input
-                        {...register("gstCertificate")}
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden"
-                        id="gst-upload"
-                      />
-                      <label htmlFor="gst-upload" className="cursor-pointer">
-                        <span className="text-indigo-600 hover:text-indigo-700 font-medium">Upload certificate</span>
-                      </label>
-                      <p className="text-sm text-gray-500 mt-1">PDF, JPG, PNG up to 5MB</p>
-                    </div>
+                  <div className="pt-4 border-t border-gray-100">
+                    <FileUploadField
+                      label="GST Certificate"
+                      subLabel="(Required since GST is provided)"
+                      name="gstCertificate"
+                      register={register}
+                      error={errors.gstCertificate}
+                      required="GST Certificate is required"
+                      watch={watch}
+                      setValue={setValue}
+                    />
                   </div>
                 )}
               </div>
             )}
-
             {step === 6 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-6">Review & Submit</h2>
@@ -642,7 +762,14 @@ export default function ServiceProviderForm() {
               {step < 6 ? (
                 <button
                   type="button"
-                  onClick={() => setStep(step + 1)}
+                  onClick={async () => {
+                    const valid = await validateStep();
+                    if (valid) setStep(step + 1);
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "smooth",
+                    });
+                  }}
                   className="flex items-center px-6 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
                 >
                   Next
@@ -663,5 +790,6 @@ export default function ServiceProviderForm() {
         </div>
       </div>
     </div>
+
   );
 }

@@ -139,9 +139,9 @@ export function Services() {
       />
 
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-b from-[#8B0000] to-[#6B0000] text-white">
+      <section className="relative py-12 bg-gradient-to-b from-[#8B0000] to-[#6B0000] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Sparkles className="w-16 h-16 text-[#D4AF37] mx-auto mb-6" />
+          {/* <Sparkles className="w-16 h-16 text-[#D4AF37] mx-auto mb-6" /> */}
           <h1 className="text-5xl mb-6">
             Our <span className="text-[#D4AF37]">Services</span>
           </h1>

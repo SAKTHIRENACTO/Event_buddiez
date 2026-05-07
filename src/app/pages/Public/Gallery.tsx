@@ -133,8 +133,7 @@ export function Gallery() {
         keywords="event gallery, wedding photos, south indian weddings, event decoration"
       />
 
-      {/* Hero Section */}
-      <section className="relative py-24 bg-gradient-to-br from-[#8B0000] to-[#4A0000] text-white">
+      <section className="relative py-12 bg-gradient-to-br from-[#8B0000] to-[#4A0000] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl font-serif mb-6">
             Our <span className="text-[#D4AF37]">Gallery</span>
