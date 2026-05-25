@@ -17,7 +17,7 @@ export function Navigation() {
   const publicNavLinks = [
     { to: "/", label: "Home" },
     { to: "/services", label: "Services" },
-    { to: "/gallery", label: "Gallery" },
+    // { to: "/gallery", label: "Gallery" },
     { to: "/contact", label: "Contact" },
     { to: "/vendor", label: "Become a Vendor" },
   ];
@@ -31,7 +31,6 @@ export function Navigation() {
 
         <div className="flex justify-between items-center h-16">
 
-          {/* LOGO */}
           <div className="flex items-center gap-2">
 
             <div

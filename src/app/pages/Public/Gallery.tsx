@@ -4,26 +4,24 @@ import { X, Trash2, Upload, ChevronLeft, ChevronRight, ImagePlus } from "lucide-
 import { supabase } from "../../lib/supabaseClient";
 import { SEOHead } from '../../components/SEOHead';
 import { useSearchParams } from "react-router-dom";
+import Engagement from '../../../assets/EngagementBN.jpg';
 
-interface GalleryImage {
-  id: string;
-  url: string;
-  category: string;
-}
+
+// interface GalleryImage {
+//   id: string;
+//   url: string;
+//   category: string;
+// }
 
 export function Gallery() {
   const [searchParams] = useSearchParams();
   const userDetail = searchParams.get("userDetails");
 
-  const [images, setImages] = useState<GalleryImage[]>([]);
+  // const [images, setImages] = useState<GalleryImage[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
-  const [files, setFiles] = useState<File[]>([]);
-  const [caption, setCaption] = useState("");
-  const [category, setCategory] = useState("Wedding");  
+   
   const [filterCategory, setFilterCategory] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-
   const breakpointColumnsObj = {
     default: 4,
     1100: 3,
@@ -31,19 +29,27 @@ export function Gallery() {
     500: 1
   };
 
-  useEffect(() => {
-    fetchImages();
-  }, []);
+   const images = [
+     {
+      id: "1",
+      url: Engagement,
+      category: "Engagement"
+     }
+    ];
 
-  const fetchImages = async () => {
-    setIsLoading(true);
-    const { data } = await supabase
-      .from("gallery_images")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (data) setImages(data);
-    setIsLoading(false);
-  };
+  // useEffect(() => {
+  //   fetchImages();
+  // }, []);
+
+  // const fetchImages = async () => {
+  //   setIsLoading(true);
+  //   const { data } = await supabase
+  //     .from("gallery_images")
+  //     .select("*")
+  //     .order("created_at", { ascending: false });
+  //   if (data) setImages(data);
+  //   setIsLoading(false);
+  // };
 
   const categories = ["All", ...new Set(images.map(i => i.category))];
   const filteredImages =
@@ -52,51 +58,51 @@ export function Gallery() {
       : images.filter(i => i.category === filterCategory);
 
   // Upload Images
-  const uploadImages = async () => {
-    if (files.length === 0) return;
-    setUploading(true);
-    try {
-      for (const file of files) {
-        const fileName = `${Date.now()}-${file.name}`;
-        const { error } = await supabase.storage
-          .from("gallery-images")
-          .upload(fileName, file);
+  // const uploadImages = async () => {
+  //   if (files.length === 0) return;
+  //   setUploading(true);
+  //   try {
+  //     for (const file of files) {
+  //       const fileName = `${Date.now()}-${file.name}`;
+  //       const { error } = await supabase.storage
+  //         .from("gallery-images")
+  //         .upload(fileName, file);
 
-        if (error) throw error;
+  //       if (error) throw error;
 
-        const { data } = supabase.storage
-          .from("gallery-images")
-          .getPublicUrl(fileName);
+  //       const { data } = supabase.storage
+  //         .from("gallery-images")
+  //         .getPublicUrl(fileName);
 
-        await supabase.from("gallery_images").insert({
-          url: data.publicUrl,
-          category
-        });
-      }
+  //       await supabase.from("gallery_images").insert({
+  //         url: data.publicUrl,
+  //         category
+  //       });
+  //     }
 
-      // Reset Upload State
-      setFiles([]);
-      setCaption("");
-      setCategory("Wedding");
-      await fetchImages();
-    } catch (err: any) {
-      alert(err.message);
-    }
-    setUploading(false);
-  };
+  //     // Reset Upload State
+  //     setFiles([]);
+  //     setCaption("");
+  //     setCategory("Wedding");
+  //     await fetchImages();
+  //   } catch (err: any) {
+  //     alert(err.message);
+  //   }
+  //   setUploading(false);
+  // };
 
-  const deleteImage = async (id: string) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this image?");
-    if (!confirmDelete) return;
+  // const deleteImage = async (id: string) => {
+  //   const confirmDelete = window.confirm("Are you sure you want to delete this image?");
+  //   if (!confirmDelete) return;
 
-    // Optimistic UI update
-    setImages(prev => prev.filter(img => img.id !== id));
+  //   // Optimistic UI update
+  //   setImages(prev => prev.filter(img => img.id !== id));
 
-    await supabase
-      .from("gallery_images")
-      .delete()
-      .eq("id", id);
-  };
+  //   await supabase
+  //     .from("gallery_images")
+  //     .delete()
+  //     .eq("id", id);
+  // };
 
   // Lightbox Navigation
   const showNext = useCallback((e?: React.MouseEvent) => {
@@ -147,7 +153,7 @@ export function Gallery() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {uploading && (
+        {/* {uploading && (
           <div className="fixed inset-0 backdrop-blur-md bg-black/60 z-50 flex items-center justify-center">
             <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-5 max-w-xs w-full">
               <div className="relative w-16 h-16">
@@ -160,7 +166,7 @@ export function Gallery() {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* <div className="bg-white shadow-sm border border-gray-100 rounded-xl p-8 mb-12">
           <h2 className="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
@@ -318,7 +324,6 @@ export function Gallery() {
                   onClick={() => setSelectedImageIndex(index)}
                 />
 
-                {/* Gradient Hover Overlay */}
                 <div
                   className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-4"
                   onClick={() => setSelectedImageIndex(index)}
@@ -331,7 +336,6 @@ export function Gallery() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          deleteImage(image.id);
                         }}
                         className="bg-white/20 hover:bg-red-600 text-white p-2 rounded-full backdrop-blur-sm transition-colors"
                       >

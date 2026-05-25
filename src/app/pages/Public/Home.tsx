@@ -13,7 +13,7 @@ import { supabase } from '../../lib/supabaseClient';
 
 
 export function Home() {
-const heroImages = [
+  const heroImages = [
     "https://i.pinimg.com/1200x/9d/cd/fb/9dcdfb09eee39cedba8bb80227bcd191.jpg",
     "https://i.pinimg.com/1200x/80/22/50/8022506379cd94c43b22225c71344f76.jpg",
     "https://i.pinimg.com/1200x/d2/35/fb/d235fb69e207d9c8661d850a2965fa93.jpg",
@@ -111,7 +111,7 @@ const heroImages = [
       {/* Hero Section */}
       <section className="relative h-[550px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-       {heroImages.map((img, index) => (
+          {heroImages.map((img, index) => (
             <img
               key={index}
               src={img}
@@ -152,6 +152,7 @@ const heroImages = [
           </div>
         </div>
       </section>
+
       <section className="py-8 bg-gradient-to-b from-[#2F5233] to-[#1F3822]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -167,6 +168,7 @@ const heroImages = [
           </div>
         </div>
       </section>
+
       <section className="py-16 px-6 md:px-12 lg:px-20 bg-white">
         <div className="text-center mb-14">
           <p className="text-black uppercase tracking-widest text-lg mb-2">Who we are</p>
@@ -215,6 +217,7 @@ const heroImages = [
           </div>
         </div>
       </section>
+
       <section className="py-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -278,6 +281,8 @@ const heroImages = [
           </Swiper>
         </div>
       </section>
+
+      
       <TestimonialSection />
       {/* Why Choose Us */}
       <section className="py-8 px-2 bg-gradient-to-b from-[#8B0000] to-[#6B0000] text-white">
